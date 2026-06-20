@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Painel de Clientes — CAC3024</title>
+<style>
+  :root {
+    --ink: #1c2521;
+    --paper: #f6f4ee;
+    --card: #ffffff;
+    --line: #dcd6c8;
+    --moss: #3f6b4f;
+    --moss-dark: #2c4d38;
+    --clay: #b5562f;
+    --clay-dark: #8f4423;
+    --muted: #74786f;
+    --ok-bg: #eaf3ec;
+    --ok-fg: #2c4d38;
+    --err-bg: #fbeae5;
+    --err-fg: #8f4423;
+    --mono: "JetBrains Mono", "Courier New", monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .topbar {
+    border-bottom: 1px solid var(--line);
+    padding: 28px 32px 22px;
+    background: var(--paper);
+  }
+
+  .topbar .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--moss);
+    margin: 0 0 6px;
+  }
+
+  .topbar h1 {
+    margin: 0 0 6px;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .topbar p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+    max-width: 640px;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 5px 11px;
+    border-radius: 100px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--muted);
+  }
+
+  .status-pill .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--muted);
+  }
+  .status-pill.online .dot { background: var(--moss); }
+  .status-pill.online { color: var(--moss-dark); border-color: #c7dccc; }
+  .status-pill.offline .dot { background: var(--clay); }
+  .status-pill.offline { color: var(--clay-dark); border-color: #ecccba; }
+
+  main {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 32px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .card.wide { grid-column: 1 / -1; }
+
+  .card-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 12px;
+  }
+
+  .card-head .num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--moss);
+    letter-spacing: 0.08em;
+  }
+
+  .card-head h2 {
+    margin: 2px 0 0;
+    font-size: 16px;
+    font-weight: 650;
+  }
+
+  .card-head .req {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--muted);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 3px 7px;
+    white-space: nowrap;
+  }
+
+  form { display: flex; flex-direction: column; gap: 10px; }
+
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+
+  label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: -4px;
+  }
+
+  input[type=text], input[type=email] {
+    font: inherit;
+    font-size: 14px;
+    padding: 9px 11px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--paper);
+    color: var(--ink);
+    width: 100%;
+  }
+  input:focus {
+    outline: none;
+    border-color: var(--moss);
+    box-shadow: 0 0 0 3px rgba(63,107,79,0.12);
+  }
+
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--ink);
+  }
+  .checkbox-row input { width: 16px; height: 16px; }
+
+  button {
+    font: inherit;
+    font-weight: 600;
+    font-size: 13.5px;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: transform 0.05s ease, opacity 0.15s ease;
+  }
+  button:active { transform: scale(0.98); }
+
+  .btn-primary { background: var(--moss); color: #fff; }
+  .btn-primary:hover { background: var(--moss-dark); }
+
+  .btn-danger { background: var(--clay); color: #fff; }
+  .btn-danger:hover { background: var(--clay-dark); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--line);
+  }
+  .btn-ghost:hover { background: var(--paper); }
+
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .result {
+    font-family: var(--mono);
+    font-size: 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 10px 12px;
+    max-height: 220px;
+    overflow-y: auto;
+    display: none;
+  }
+  .result.show { display: block; }
+  .result.ok { border-color: #c7dccc; background: var(--ok-bg); color: var(--ok-fg); }
+  .result.err { border-color: #ecccba; background: var(--err-bg); color: var(--err-fg); }
+
+  /* Lista de clientes */
+  .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  .filters > div { flex: 1; min-width: 130px; }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    background: var(--paper);
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--paper); }
+
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    padding: 2px 7px;
+    border-radius: 100px;
+  }
+  .badge.ativo { background: var(--ok-bg); color: var(--ok-fg); }
+  .badge.inativo { background: var(--err-bg); color: var(--err-fg); }
+
+  .id-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .row-actions { display: flex; gap: 6px; }
+  .row-actions button {
+    padding: 5px 9px;
+    font-size: 11.5px;
+  }
+
+  .empty-state {
+    padding: 28px 12px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin: -4px 0 0;
+  }
+
+  footer {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 8px 32px 40px;
+    color: var(--muted);
+    font-size: 12px;
+    font-family: var(--mono);
+  }
+
+  @media (max-width: 640px) {
+    .row { flex-direction: column; }
+    .topbar { padding: 22px 18px; }
+    main { padding: 18px; gap: 16px; }
+    footer { padding: 8px 18px 32px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <p class="eyebrow">CAC3024-09754 · Integração de Sistemas para Automação</p>
+  <h1>Painel de Cadastro de Clientes</h1>
+  <p>Interface de testes para os webservices REST da API — cadastro, busca, atualização, listagem com filtro e consulta de CEP via ViaCEP.</p>
+  <div class="status-pill" id="apiStatus"><span class="dot"></span><span id="apiStatusText">verificando conexão…</span></div>
+</div>
+
+<main>
+
+  <!-- CADASTRAR — Requisito 2 -->
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <p class="num">01</p>
+        <h2>Cadastrar cliente</h2>
+      </div>
+      <span class="req">Requisito 2</span>
+    </div>
+    <form id="formCriar">
+      <label>Nome</label>
+      <input type="text" id="c_nome" placeholder="Maria Silva" required />
+
+      <label>E-mail</label>
+      <input type="email" id="c_email" placeholder="maria@email.com" required />
+
+      <label>Telefone</label>
+      <input type="text" id="c_telefone" placeholder="47999990000" required />
+
+      <div class="row">
+        <div>
+          <label>CEP</label>
+          <input type="text" id="c_cep" placeholder="89010-000" />
+        </div>
+        <div>
+          <label>Cidade</label>
+          <input type="text" id="c_cidade" placeholder="Blumenau" />
+        </div>
+        <div>
+          <label>Estado</label>
+          <input type="text" id="c_estado" placeholder="SC" maxlength="2" />
+        </div>
+      </div>
+
+      <div class="checkbox-row">
+        <input type="checkbox" id="c_ativo" checked />
+        <label style="margin:0; text-transform:none; font-weight:500;">Cliente ativo</label>
+      </div>
+
+      <div class="btn-row">
+        <button type="submit" class="btn-primary">Cadastrar</button>
+        <button type="button" class="btn-ghost" id="c_preencherCep">Preencher endereço pelo CEP</button>
+      </div>
+    </form>
+    <div class="result" id="r_criar"></div>
+  </section>
+
+  <!-- BUSCAR POR ID — Requisito 3 -->
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <p class="num">02</p>
+        <h2>Buscar cliente por ID</h2>
+      </div>
+      <span class="req">Requisito 3</span>
+    </div>
+    <form id="formBuscar">
+      <label>ID do cliente</label>
+      <input type="text" id="b_id" placeholder="cole o ID retornado no cadastro" required />
+      <div class="btn-row">
+        <button type="submit" class="btn-primary">Buscar</button>
+      </div>
+    </form>
+    <div class="result" id="r_buscar"></div>
+  </section>
+
+  <!-- CONSULTAR CEP — Requisito 4 -->
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <p class="num">03</p>
+        <h2>Consultar CEP (ViaCEP)</h2>
+      </div>
+      <span class="req">Requisito 4 — externo</span>
+    </div>
+    <form id="formCep">
+      <label>CEP</label>
+      <input type="text" id="cep_valor" placeholder="01310-100" required />
+      <p class="hint">Consulta o webservice de terceiro viacep.com.br em tempo real.</p>
+      <div class="btn-row">
+        <button type="submit" class="btn-primary">Consultar</button>
+      </div>
+    </form>
+    <div class="result" id="r_cep"></div>
+  </section>
+
+  <!-- ATUALIZAR / REMOVER — Requisito 2 -->
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <p class="num">04</p>
+        <h2>Atualizar ou remover</h2>
+      </div>
+      <span class="req">Requisito 2</span>
+    </div>
+    <form id="formAtualizar">
+      <label>ID do cliente</label>
+      <input type="text" id="a_id" placeholder="cole o ID do cliente" required />
+
+      <div class="row">
+        <div>
+          <label>Cidade (opcional)</label>
+          <input type="text" id="a_cidade" placeholder="nova cidade" />
+        </div>
+        <div>
+          <label>Estado (opcional)</label>
+          <input type="text" id="a_estado" placeholder="UF" maxlength="2" />
+        </div>
+      </div>
+      <label>Telefone (opcional)</label>
+      <input type="text" id="a_telefone" placeholder="novo telefone" />
+
+      <div class="btn-row">
+        <button type="submit" class="btn-primary">Atualizar</button>
+        <button type="button" class="btn-danger" id="a_remover">Remover cliente</button>
+      </div>
+    </form>
+    <div class="result" id="r_atualizar"></div>
+  </section>
+
+  <!-- LISTAGEM — Requisito 5 -->
+  <section class="card wide">
+    <div class="card-head">
+      <div>
+        <p class="num">05</p>
+        <h2>Listar clientes</h2>
+      </div>
+      <span class="req">Requisito 5</span>
+    </div>
+
+    <div class="filters">
+      <div>
+        <label>Nome contém</label>
+        <input type="text" id="f_nome" placeholder="ex: maria" />
+      </div>
+      <div>
+        <label>Cidade</label>
+        <input type="text" id="f_cidade" placeholder="ex: Blumenau" />
+      </div>
+      <div>
+        <label>Estado</label>
+        <input type="text" id="f_estado" placeholder="ex: SC" maxlength="2" />
+      </div>
+      <div>
+        <label>Status</label>
+        <select id="f_ativo" style="font:inherit; font-size:14px; padding:9px 11px; border:1px solid var(--line); border-radius:6px; background:var(--paper); width:100%;">
+          <option value="">Todos</option>
+          <option value="true">Ativos</option>
+          <option value="false">Inativos</option>
+        </select>
+      </div>
+      <button type="button" class="btn-primary" id="btnFiltrar">Filtrar</button>
+      <button type="button" class="btn-ghost" id="btnLimparFiltro">Limpar</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th>Cidade / UF</th>
+            <th>Status</th>
+            <th>ID</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tabelaClientes">
+          <tr><td colspan="6" class="empty-state">Carregando clientes…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<footer>cliente-api · FastAPI + MongoDB + ViaCEP · localhost:8000</footer>
+
+<script>
+  const API = "";
+
+  // ---------- helpers ----------
+  function mostrarResultado(elId, dados, ok) {
+    const el = document.getElementById(elId);
+    el.textContent = typeof dados === "string" ? dados : JSON.stringify(dados, null, 2);
+    el.className = "result show " + (ok ? "ok" : "err");
+  }
+
+  async function chamarApi(url, opcoes = {}) {
+    try {
+      const resp = await fetch(API + url, {
+        headers: { "Content-Type": "application/json" },
+        ...opcoes,
+      });
+      const dados = await resp.json().catch(() => ({}));
+      return { ok: resp.ok, status: resp.status, dados };
+    } catch (e) {
+      return { ok: false, status: 0, dados: { detail: "Não foi possível conectar à API. Verifique se o servidor está rodando." } };
+    }
+  }
+
+  // ---------- status da API ----------
+  async function checarStatus() {
+    const pill = document.getElementById("apiStatus");
+    const txt = document.getElementById("apiStatusText");
+    const r = await chamarApi("/api");
+    if (r.ok) {
+      pill.className = "status-pill online";
+      txt.textContent = "API online — MongoDB conectado";
+    } else {
+      pill.className = "status-pill offline";
+      txt.textContent = "API offline — verifique o servidor uvicorn";
+    }
+  }
+
+  // ---------- 1. Cadastrar ----------
+  document.getElementById("formCriar").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const corpo = {
+      nome: document.getElementById("c_nome").value,
+      email: document.getElementById("c_email").value,
+      telefone: document.getElementById("c_telefone").value,
+      cep: document.getElementById("c_cep").value || null,
+      cidade: document.getElementById("c_cidade").value || null,
+      estado: document.getElementById("c_estado").value || null,
+      ativo: document.getElementById("c_ativo").checked,
+    };
+    const r = await chamarApi("/api/v1/clientes", { method: "POST", body: JSON.stringify(corpo) });
+    mostrarResultado("r_criar", r.dados, r.ok);
+    if (r.ok) {
+      document.getElementById("formCriar").reset();
+      document.getElementById("c_ativo").checked = true;
+      carregarLista();
+    }
+  });
+
+  // preencher endereço pelo CEP digitado no form de cadastro
+  document.getElementById("c_preencherCep").addEventListener("click", async () => {
+    const cep = document.getElementById("c_cep").value.trim();
+    if (!cep) { mostrarResultado("r_criar", "Digite um CEP no campo acima primeiro.", false); return; }
+    const r = await chamarApi(`/api/v1/cep/${encodeURIComponent(cep)}`);
+    if (r.ok) {
+      document.getElementById("c_cidade").value = r.dados.cidade || "";
+      document.getElementById("c_estado").value = r.dados.estado || "";
+      mostrarResultado("r_criar", "Endereço preenchido a partir do ViaCEP.", true);
+    } else {
+      mostrarResultado("r_criar", r.dados, false);
+    }
+  });
+
+  // ---------- 2. Buscar por ID ----------
+  document.getElementById("formBuscar").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const id = document.getElementById("b_id").value.trim();
+    const r = await chamarApi(`/api/v1/clientes/${encodeURIComponent(id)}`);
+    mostrarResultado("r_buscar", r.dados, r.ok);
+  });
+
+  // ---------- 3. Consultar CEP ----------
+  document.getElementById("formCep").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const cep = document.getElementById("cep_valor").value.trim();
+    const r = await chamarApi(`/api/v1/cep/${encodeURIComponent(cep)}`);
+    mostrarResultado("r_cep", r.dados, r.ok);
+  });
+
+  // ---------- 4. Atualizar / remover ----------
+  document.getElementById("formAtualizar").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const id = document.getElementById("a_id").value.trim();
+    const corpo = {};
+    const cidade = document.getElementById("a_cidade").value;
+    const estado = document.getElementById("a_estado").value;
+    const telefone = document.getElementById("a_telefone").value;
+    if (cidade) corpo.cidade = cidade;
+    if (estado) corpo.estado = estado;
+    if (telefone) corpo.telefone = telefone;
+
+    const r = await chamarApi(`/api/v1/clientes/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      body: JSON.stringify(corpo),
+    });
+    mostrarResultado("r_atualizar", r.dados, r.ok);
+    if (r.ok) carregarLista();
+  });
+
+  document.getElementById("a_remover").addEventListener("click", async () => {
+    const id = document.getElementById("a_id").value.trim();
+    if (!id) { mostrarResultado("r_atualizar", "Informe o ID do cliente para remover.", false); return; }
+    if (!confirm("Remover este cliente definitivamente?")) return;
+    const r = await chamarApi(`/api/v1/clientes/${encodeURIComponent(id)}`, { method: "DELETE" });
+    mostrarResultado("r_atualizar", r.dados, r.ok);
+    if (r.ok) carregarLista();
+  });
+
+  // ---------- 5. Listagem com filtro ----------
+  function montarQuery() {
+    const params = new URLSearchParams();
+    const nome = document.getElementById("f_nome").value.trim();
+    const cidade = document.getElementById("f_cidade").value.trim();
+    const estado = document.getElementById("f_estado").value.trim();
+    const ativo = document.getElementById("f_ativo").value;
+    if (nome) params.set("nome", nome);
+    if (cidade) params.set("cidade", cidade);
+    if (estado) params.set("estado", estado);
+    if (ativo) params.set("ativo", ativo);
+    return params.toString();
+  }
+
+  async function carregarLista() {
+    const tbody = document.getElementById("tabelaClientes");
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Carregando clientes…</td></tr>`;
+    const qs = montarQuery();
+    const r = await chamarApi("/api/v1/clientes" + (qs ? "?" + qs : ""));
+
+    if (!r.ok) {
+      tbody.innerHTML = `<tr><td colspan="6" class="empty-state">${(r.dados && r.dados.detail) || "Erro ao carregar clientes."}</td></tr>`;
+      return;
+    }
+
+    const lista = r.dados;
+    if (!Array.isArray(lista) || lista.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Nenhum cliente encontrado para este filtro.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = lista.map((c) => `
+      <tr>
+        <td>${escapeHtml(c.nome || "")}</td>
+        <td>${escapeHtml(c.email || "")}</td>
+        <td>${escapeHtml(c.cidade || "—")} ${c.estado ? "/ " + escapeHtml(c.estado) : ""}</td>
+        <td><span class="badge ${c.ativo ? "ativo" : "inativo"}">${c.ativo ? "ativo" : "inativo"}</span></td>
+        <td class="id-tag">${c._id}</td>
+        <td>
+          <div class="row-actions">
+            <button class="btn-ghost" onclick="usarId('${c._id}')">Usar ID</button>
+          </div>
+        </td>
+      </tr>
+    `).join("");
+  }
+
+  function usarId(id) {
+    document.getElementById("b_id").value = id;
+    document.getElementById("a_id").value = id;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  document.getElementById("btnFiltrar").addEventListener("click", carregarLista);
+  document.getElementById("btnLimparFiltro").addEventListener("click", () => {
+    document.getElementById("f_nome").value = "";
+    document.getElementById("f_cidade").value = "";
+    document.getElementById("f_estado").value = "";
+    document.getElementById("f_ativo").value = "";
+    carregarLista();
+  });
+
+  // inicialização
+  checarStatus();
+  carregarLista();
+</script>
+
+</body>
+</html>
